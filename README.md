@@ -1,27 +1,58 @@
-# Stacopa.com - Static HTML Website
+# Stacopa — Website Statis
 
-Proyek ini adalah *backup* / konversi statis HTML dari website perusahaan Stacopa (sebelumnya berbasis WordPress). Karena sudah berformat statis, situs ini siap untuk dihosting di platform seperti GitHub Pages, Netlify, atau web server standar apa pun (Apache, Nginx) tanpa memerlukan PHP atau database.
+Website resmi [stacopa.com](https://stacopa.com), dikonversi dari WordPress menjadi static HTML. Dihosting di Proxmox LXC dan diakses publik via Cloudflare Tunnel.
 
-## Perubahan dan Optimalisasi Terbaru
+## Tech Stack
 
-Proyek ini telah dibersihkan dan dioptimalkan dari sisa-sisa (residu) sistem WordPress lama agar lebih aman, ringan, dan fungsional:
+- **Format:** Static HTML (WordPress export)
+- **Server:** `serve` (Node.js static file server)
+- **Deployment:** Proxmox LXC + Cloudflare Tunnel
 
-1. **Pembersihan File Sistem WordPress:**
-   - Menghapus file `xmlrpc0db00db0.html` (sering menjadi target eksploitasi bot).
-   - Menghapus folder `feed/` dan `comments/` beserta isinya karena fitur RSS dinamis sudah tidak digunakan pada web statis.
+## Struktur
 
-2. **Penghapusan Meta Tag WordPress (Keamanan & Kerapian):**
-   - Menghapus seluruh tag `generator` WordPress, link RSD, Windows Live Writer (wlwmanifest), dan link `alternate` RSS Feed dari bagian `<head>` pada **seluruh 14 file HTML**. Hal ini bertujuan untuk menyembunyikan jejak versi WordPress lawas dari bot peretas.
+```
+/
+├── index.html              # Halaman utama
+├── company/                # Profil perusahaan (history, vision, CSR, dll)
+├── products/               # Halaman produk & layanan
+├── casestudy/              # Case study
+├── clients/                # Daftar klien
+├── contact-us/             # Halaman kontak
+├── serve.json              # Konfigurasi server (clean URLs, no directory listing)
+└── wp-content/             # Assets: gambar, CSS, JS, font
+    ├── uploads/            # Gambar konten
+    ├── themes/stacopa/     # CSS, JS, font, favicon
+    └── plugins/            # Plugin assets (slider, form, dll)
+```
 
-3. **Perbaikan Fungsionalitas jQuery & Slider (Carousel):**
-   - Memperbaiki tautan (link) library jQuery (`jquery.js` dan `jquery-migrate.js`) yang sebelumnya rusak/hilang (karena mengarah ke folder internal sistem `wp-includes` yang tidak ikut diekspor).
-   - Mengganti tautan-tautan tersebut dengan **CDN Resmi jQuery** (`https://code.jquery.com/`) di seluruh file HTML.
-   - Hasilnya, fitur animasi FlexSlider (banner bergambar di halaman beranda) kini berfungsi kembali dengan normal dan lancar secara statis.
+## Struktur Server
 
-## Catatan Pengembangan (Development)
+- **App directory:** `/var/www/stacopa`
+- **Service:** `stacopa-static.service` (systemd)
+- **Port:** 8080 (diakses via Cloudflare Tunnel)
 
-- **Menambah/Mengganti Gambar Slider Beranda:** Buka `index.html`, cari struktur `<ul class="slides">`, dan sesuaikan tag `<li><img src="..."></li>` dengan lokasi gambar Anda (contoh di `wp-content/uploads/`).
-- **Fitur Formulir Kontak:** Sistem form bawaan (yang menggunakan AJAX dan Contact Form plugin WordPress) tidak lagi berfungsi karena ketiadaan backend PHP. Sangat disarankan untuk memodifikasi ulang form HTML di `contact-us/index.html` dan mengarahkannya ke layanan eksternal gratis (seperti Formspree atau Getform) agar email tetap dapat terkirim.
+## Update Konten
+
+### Mengedit halaman
+Edit langsung file `index.html` atau file di folder terkait, lalu upload ke server:
+
+```bash
+scp -r . root@192.168.18.102:/var/www/stacopa/
+```
+
+### Mengganti gambar slider (beranda)
+Buka `index.html`, cari `<ul class="slides">`, sesuaikan tag `<li><img src="..."></li>`.
+
+### Form kontak
+Form bawaan tidak berfungsi (butuh backend PHP). Gunakan layanan eksternal seperti [Formspree](https://formspree.io) atau [Getform](https://getform.io) dengan memodifikasi `contact-us/index.html`.
+
+## Optimalisasi yang Sudah Dilakukan
+
+- Hapus file `xmlrpc` dan folder `feed/` & `comments/` (residu WordPress)
+- Hapus meta tag generator WordPress dari seluruh HTML (menyembunyikan versi lama dari bot)
+- Ganti link jQuery ke CDN resmi agar slider berfungsi
+- Tambah `serve.json` dengan clean URLs dan directory listing dinonaktifkan
 
 ## Hak Cipta
+
 Copyright &copy; 2013 - Stacopa Raya. All Rights Reserved.
